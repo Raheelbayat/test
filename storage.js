@@ -16,7 +16,11 @@ function safeParse(str, fallback) {
 }
 
 export function listIndex() {
-  return safeParse(localStorage.getItem(indexKey()), []);
+  // Parse the index, but if the stored value is null (JSON "null") or not an array,
+  // return an empty array to avoid callers doing .find/.forEach on null.
+  const parsed = safeParse(localStorage.getItem(indexKey()), null);
+  if (!Array.isArray(parsed)) return [];
+  return parsed;
 }
 
 export function saveIndex(arr) {
@@ -61,7 +65,11 @@ export function deleteCapsule(id) {
 }
 
 export function getProgress(id) {
-  return safeParse(localStorage.getItem(progressKey(id)), { bestScore: 0, knownFlashcards: [] });
+  // safeParse may return null if the stored value is the JSON literal `null`.
+  // Treat null or non-object as the default progress object.
+  const parsed = safeParse(localStorage.getItem(progressKey(id)), null);
+  if (!parsed || typeof parsed !== 'object') return { bestScore: 0, knownFlashcards: [] };
+  return parsed;
 }
 
 export function saveProgress(id, progress) {
