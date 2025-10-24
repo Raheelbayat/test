@@ -1,4 +1,5 @@
 import { initCapsules } from "./capsule.js";
+import Storage from "./storage.js";
 
 const Router = {
   routes: {
@@ -10,209 +11,283 @@ const Router = {
             <p class="text-muted mb-0">Your saved capsules</p>
           </div>
           <div class="d-flex gap-2">
-            <button id="importFileBtn" class="btn btn-json">Import JSON</button>
+            <button id="importJsonBtn" class="btn btn-json">Import JSON</button>
             <button class="btn btn-primary1 fw-bold" id="newCapsBtnFromLibrary">New Capsule</button>
           </div>
         </div>
-
         <div id="capsuleContainer" class="container-3-for-newCapsule mt-4"></div>
-
-        <div id="noCapsulesMsg" class="p-4 bg-light rounded-3 shadow-sm text-center mt-3">
-          <h3>No capsules in library</h3>
-          <p>Create a capsule or import JSON to get started.</p>
-        </div>
       </div>
     `,
 
     "/author": () => `
       <div class="container my-4">
-        <h3 class="mb-3">Create Capsule (Author)</h3>
-
+        <h3 class="mb-3">Create Capsule</h3>
         <form id="capsuleForm" class="mb-3">
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label for="metaTitle" class="form-label">Title *</label>
-              <input type="text" id="metaTitle" class="form-control" placeholder="Capsule title">
-            </div>
-
-            <div class="col-md-6">
-              <label for="metaSubject" class="form-label">Subject</label>
-              <input type="text" id="metaSubject" class="form-control" placeholder="Subject or tag">
-            </div>
-
-            <div class="col-md-4">
-              <label for="metaLevel" class="form-label">Level</label>
-              <select id="metaLevel" class="form-select">
-                <option value="Beginner" selected>Beginner</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Advanced">Advanced</option>
-              </select>
-            </div>
-
-            <div class="col-12">
-              <label for="metaDescription" class="form-label">Description</label>
-              <textarea id="metaDescription" class="form-control" rows="2" placeholder="Short description"></textarea>
-            </div>
+          <div class="mb-2">
+            <input type="text" id="metaTitle" class="form-control" placeholder="Title" required>
           </div>
-
-          <hr />
-
-          <!-- Notes editor -->
-          <h5>Notes</h5>
-          <p class="text-muted">Enter multiple lines; each line is one note (Markdown-lite supported).</p>
-          <textarea id="notesEditor" class="form-control mb-3" rows="5" placeholder="One note per line or Markdown-lite"></textarea>
-
-          <!-- Flashcards editor -->
-          <h5 class="mt-3">Flashcards</h5>
-          <div id="flashcardsContainer" class="mb-2"></div>
+          <div class="mb-2">
+            <input type="text" id="metaSubject" class="form-control" placeholder="Subject">
+          </div>
+          <div class="mb-2">
+            <select id="metaLevel" class="form-select">
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+          </div>
+          <div class="mb-2">
+            <textarea id="metaDescription" class="form-control" placeholder="Description"></textarea>
+          </div>
+          <div class="mb-2">
+            <textarea id="notesEditor" class="form-control" placeholder="Notes (one per line)"></textarea>
+          </div>
           <div class="mb-3">
-            <button type="button" class="btn btn-json me-2" id="addFlashcardBtn">Add Flashcard</button>
+            <h5>Flashcards</h5>
+            <div id="flashcardsContainer"></div>
+            <button type="button" class="btn btn-lightblue btn-sm mt-2" id="addFlashcardBtn">Add Flashcard</button>
           </div>
-
-          <!-- Quiz editor -->
-          <h5 class="mt-3">Quiz</h5>
-          <div id="quizContainer" class="mb-2"></div>
           <div class="mb-3">
-            <button type="button" class="btn btn-pink me-2" id="addQuestionBtn">Add Question</button>
+            <h5>Quiz Questions</h5>
+            <div id="quizContainer"></div>
+            <button type="button" class="btn btn-lightgreen btn-sm mt-2" id="addQuestionBtn">Add Question</button>
           </div>
-
-          <div class="d-flex gap-2">
-            <button type="button" id="saveCapsuleBtn" class="btn btn-lightgreen">Save Capsule</button>
-            <button type="button" id="clearDraftBtn" class="btn btn-salmon">Clear Draft</button>
-            <button type="button" id="exportAllBtn" class="btn btn-secondary">Export All</button>
-            <button type="button" id="importJsonBtn" class="btn btn-json">Import JSON</button>
+          <div class="d-flex gap-2 mt-3">
+            <button type="button" class="btn btn-primary1" id="saveCapsuleBtn">Save Capsule</button>
+            <button type="button" class="btn btn-salmon" id="clearDraftBtn">Clear Draft</button>
+            <button type="button" class="btn btn-json" id="importJsonBtnAuthor">Import JSON</button>
           </div>
         </form>
-
-        <div id="capsuleContainer" class="container-3-for-newCapsule mt-4"></div>
-
-        <div id="noCapsulesMsg" class="p-4 bg-light rounded-3 shadow-sm text-center mt-3">
-          <h3>No capsules yet</h3>
-          <p>Create a capsule or import JSON to get started.</p>
-        </div>
       </div>
     `,
 
     "/learn": () => `
       <div class="container my-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <div>
-            <h3 class="mb-0">Learn</h3>
-            <p class="text-muted mb-0">Select a capsule to study</p>
+        <h3 class="mb-3">Learn Capsules</h3>
+        <div class="mb-3">
+          <select id="selectCapsule" class="form-select">
+            <option value="">Select a capsule</option>
+          </select>
+        </div>
+        <div id="learnContent" class="mt-3">
+          <div id="notesTab" style="display:none;">
+            <h5>Notes</h5>
+            <div id="notesDisplay"></div>
           </div>
-          <div class="d-flex gap-2 align-items-center">
-            <select id="selectCapsule" class="form-select"></select>
-            <button id="exportSelectedBtn" class="btn btn-json">Export</button>
-            <button class="btn btn-primary1" id="newCapsBtnFromLibrary">Author</button>
+          <div id="flashcardsTab" style="display:none;">
+            <h5>Flashcards</h5>
+            <div id="flashcardContainer"></div>
+          </div>
+          <div id="quizTab" style="display:none;">
+            <h5>Quiz</h5>
+            <div id="quizContainerLearn"></div>
           </div>
         </div>
-
-        <!-- Tabs -->
-        <ul class="nav nav-tabs" id="learnTabs" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button" role="tab">Notes</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="flashcards-tab" data-bs-toggle="tab" data-bs-target="#flashcards" type="button" role="tab">Flashcards</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="quiz-tab" data-bs-toggle="tab" data-bs-target="#quiz" type="button" role="tab">Quiz</button>
-          </li>
-        </ul>
-
-        <div class="tab-content p-3 border border-top-0" id="learnTabContent">
-          <div class="tab-pane fade show active" id="notes" role="tabpanel">
-            <div class="mb-2 d-flex gap-2">
-              <input id="notesSearch" class="form-control" placeholder="Search notes...">
-              <div id="notesCount" class="text-muted align-self-center">0</div>
-            </div>
-            <ul id="notesList" class="list-group"></ul>
-          </div>
-
-          <div class="tab-pane fade" id="flashcards" role="tabpanel">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div>
-                <span id="fcCounter">0 / 0</span>
-                <span id="fcKnownCount" class="ms-3 text-success"></span>
-              </div>
-              <div class="d-flex gap-2">
-                <button id="fcPrev" class="btn btn-light">Prev</button>
-                <button id="fcNext" class="btn btn-light">Next</button>
-                <button id="fcToggleKnown" class="btn btn-pink">Mark Known</button>
-              </div>
-            </div>
-            <div id="flashcardCard" class="d-flex justify-content-center">
-              <!-- flashcard injected here -->
-            </div>
-          </div>
-
-          <div class="tab-pane fade" id="quiz" role="tabpanel">
-            <div class="mb-2">
-              <div id="quizProgress" class="text-muted">Question <span id="quizIndex">0</span> / <span id="quizTotal">0</span></div>
-              <h5 id="quizQuestion">Select a capsule first</h5>
-            </div>
-            <div id="quizChoices" class="d-grid gap-2 mb-2"></div>
-            <div id="quizFeedback" class="mb-2"></div>
-            <div class="d-flex justify-content-between align-items-center">
-              <div id="quizScore" class="fw-bold"></div>
-              <div id="bestScore" class="text-muted"></div>
-            </div>
-          </div>
+        <div class="mt-3 d-flex gap-2">
+          <button type="button" class="btn btn-lightblue" id="showNotesBtn">Notes</button>
+          <button type="button" class="btn btn-lightgreen" id="showFlashcardsBtn">Flashcards</button>
+          <button type="button" class="btn btn-pink" id="showQuizBtn">Quiz</button>
         </div>
       </div>
+      <div class="container my-4">
+  <h3 class="mb-3">Learn Capsules</h3>
+
+  <!-- Capsule Selector (optional) -->
+  <div class="mb-3">
+    <label for="selectCapsule" class="form-label">Select Capsule:</label>
+    <select id="selectCapsule" class="form-select"></select>
+  </div>
+
+  <!-- Tabs for Notes, Flashcards, Quiz -->
+  <ul class="nav nav-tabs mb-3" id="learnTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button" role="tab">Notes</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="flashcards-tab" data-bs-toggle="tab" data-bs-target="#flashcards" type="button" role="tab">Flashcards</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="quiz-tab" data-bs-toggle="tab" data-bs-target="#quiz" type="button" role="tab">Quiz</button>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <!-- Notes -->
+    <div class="tab-pane fade show active" id="notes" role="tabpanel">
+      <div id="notesContainer" class="p-3 border rounded bg-white" style="min-height:150px;">
+        <!-- Notes from capsule appear here -->
+      </div>
+    </div>
+
+    <!-- Flashcards -->
+    <div class="tab-pane fade" id="flashcards" role="tabpanel">
+      <div id="flashcardsContainerLearn" class="d-flex flex-wrap gap-3">
+        <!-- Flashcards from capsule appear here -->
+      </div>
+    </div>
+
+    <!-- Quiz -->
+    <div class="tab-pane fade" id="quiz" role="tabpanel">
+      <div id="quizContainerLearn">
+        <!-- Quiz questions from capsule appear here -->
+      </div>
+    </div>
+  </div>
+</div>
+
     `
   },
 
-  // ✅ Initialize Router
   init: () => {
-    // Nav links (e.g., top navbar)
     document.querySelectorAll("a.nav-link").forEach(link => {
       link.addEventListener("click", e => {
         e.preventDefault();
-        const route = link.getAttribute("href");
-        Router.nav(route);
+        Router.nav(link.getAttribute("href"));
       });
     });
 
-    // Back/forward browser navigation
     window.addEventListener("popstate", e => {
-      const route = e.state?.route || "/";
-      Router.nav(route, false);
+      Router.nav(e.state?.route || "/", false);
     });
 
-    // Initial page load
     Router.nav(window.location.pathname, false);
   },
 
-  // ✅ Navigation handler
-  // nav(route, addToHistory = true, afterRender)
-  nav: (route, addToHistory = true, afterRender) => {
+  nav: (route, addToHistory = true) => {
     const entry = document.querySelector("#entry");
-    if (!entry) {
-      console.error("❌ #entry element missing in HTML!");
-      return;
-    }
+    if (!entry) return console.error("❌ #entry element missing in HTML!");
 
     if (addToHistory) history.pushState({ route }, "", route);
-
-    // Inject HTML content
     entry.innerHTML = Router.routes[route]?.() || "<h1>Page not found</h1>";
 
-    // Initialize capsule logic on routes that render #capsuleContainer (library, author, learn)
-    if (route === "/author" || route === "/" || route === "/learn") initCapsules();
+    initCapsules();
 
-    // Call afterRender hook if provided (run after initCapsules)
-    if (typeof afterRender === 'function') {
-      try { afterRender(); } catch (err) { console.error('afterRender callback failed', err); }
+    // Library → Author
+    const newCapsBtn = document.getElementById("newCapsBtnFromLibrary");
+    if (newCapsBtn) newCapsBtn.addEventListener("click", () => Router.nav("/author"));
+
+    // JSON Import
+    const importBtns = [
+      document.getElementById("importJsonBtn"),
+      document.getElementById("importJsonBtnAuthor")
+    ];
+    importBtns.forEach(btn => {
+      if (!btn) return;
+      btn.addEventListener("click", () => {
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = ".json";
+        fileInput.addEventListener("change", async e => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const text = await file.text();
+          try {
+            const parsed = JSON.parse(text);
+            const id = Storage.importCapsule(parsed);
+            if (id) {
+              alert(`Imported capsule "${parsed.capsule.meta.title}"`);
+              Router.nav("/");
+            } else {
+              alert("Failed to import capsule.");
+            }
+          } catch {
+            alert("Invalid JSON file.");
+          }
+        });
+        fileInput.click();
+      });
+    });
+
+    // Learn page tab buttons
+    if (route === "/learn") {
+      const notesTab = document.getElementById("notesTab");
+      const flashcardsTab = document.getElementById("flashcardsTab");
+      const quizTab = document.getElementById("quizTab");
+      const notesDisplay = document.getElementById("notesDisplay");
+      const flashcardContainer = document.getElementById("flashcardContainer");
+      const quizContainerLearn = document.getElementById("quizContainerLearn");
+      const selectCaps = document.getElementById("selectCapsule");
+
+      function hideAllTabs() {
+        notesTab.style.display = "none";
+        flashcardsTab.style.display = "none";
+        quizTab.style.display = "none";
+      }
+
+      document.getElementById("showNotesBtn").addEventListener("click", () => {
+        hideAllTabs();
+        notesTab.style.display = "block";
+      });
+      document.getElementById("showFlashcardsBtn").addEventListener("click", () => {
+        hideAllTabs();
+        flashcardsTab.style.display = "block";
+      });
+      document.getElementById("showQuizBtn").addEventListener("click", () => {
+        hideAllTabs();
+        quizTab.style.display = "block";
+      });
+
+      selectCaps.addEventListener("change", () => {
+        const id = selectCaps.value;
+        if (!id) return;
+        const capsule = Storage.loadCapsule(id);
+        if (!capsule) return;
+
+        // Notes
+        notesDisplay.innerHTML = "";
+        if (capsule.notes && capsule.notes.length) {
+          capsule.notes.forEach(line => {
+            const p = document.createElement("p");
+            p.textContent = line;
+            notesDisplay.appendChild(p);
+          });
+        }
+
+        // Flashcards
+        flashcardContainer.innerHTML = "";
+        if (capsule.flashcards && capsule.flashcards.length) {
+          capsule.flashcards.forEach(f => {
+            const card = document.createElement("div");
+            card.className = "flashcard-wrapper mb-2";
+            card.innerHTML = `
+              <div class="flashcard">
+                <div class="flashcard-face flashcard-front">${f.front}</div>
+                <div class="flashcard-face flashcard-back">${f.back}</div>
+              </div>`;
+            card.querySelector(".flashcard-wrapper, .flashcard").addEventListener("click", () => {
+              const fc = card.querySelector(".flashcard");
+              fc.classList.toggle("is-flipped");
+            });
+            flashcardContainer.appendChild(card);
+          });
+        }
+
+        // Quiz
+        quizContainerLearn.innerHTML = "";
+        if (capsule.quiz && capsule.quiz.length) {
+          capsule.quiz.forEach((q, i) => {
+            const card = document.createElement("div");
+            card.className = "card card-body mb-2";
+            card.innerHTML = `
+              <h6>${i+1}. ${q.question}</h6>
+              <div class="d-flex flex-column gap-1">
+                ${q.choices.map((c,j) => `<button class="btn btn-light btn-sm" data-choice="${j}">${c}</button>`).join("")}
+              </div>
+              <p class="mt-1 text-success" style="display:none;">Answer: ${q.choices[q.answer]}</p>
+              <p class="mt-1 text-muted">${q.explanation || ""}</p>
+            `;
+            const buttons = card.querySelectorAll("button");
+            buttons.forEach(btn => {
+              btn.addEventListener("click", () => {
+                card.querySelector("p.text-success").style.display = "block";
+              });
+            });
+            quizContainerLearn.appendChild(card);
+          });
+        }
+      });
     }
 
-    // If user clicks "Go to Author Page" on Library or Learn Page
-    const addCapsFromLibrary = document.getElementById("newCapsBtnFromLibrary");
-    if (addCapsFromLibrary) {
-      addCapsFromLibrary.addEventListener("click", () => Router.nav("/author"));
-    }
-
-    // Scroll to top for UX
     window.scrollTo(0, 0);
   }
 };
